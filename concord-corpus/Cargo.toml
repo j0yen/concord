@@ -1,0 +1,48 @@
+[package]
+name = "concord-corpus"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+description = "Perspective-diverse source corpus builder for the concord workspace"
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "concord"
+path = "src/main.rs"
+
+[dependencies]
+# CLI parsing
+clap = { version = "4", features = ["derive"] }
+# JSON serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Timestamps
+chrono = { version = "0.4", default-features = false, features = ["serde", "clock"] }
+# SIGPIPE handling
+sigpipe = "0.1"
+# URL parsing / normalization for dedup
+url = "2"
+# Error handling
+anyhow = "1"
+# Table display for `corpus show`
+tabled = { version = "0.15", default-features = false, features = ["std"] }
+
+[dev-dependencies]
+proptest = "1"
+tempfile = "3"
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"
+panic = "abort"

@@ -1,0 +1,114 @@
+{
+  "schema": "autobuilder.intent_card.v1",
+  "prd_source": "/home/jsy/wintermute/autobuilder/PRD-concord-corpus.md",
+  "root_motivation": "Give contested-claim reasoning a shared, machine-readable evidence base that is structurally forced to represent multiple stances before any LLM reasoning begins. Without a stable Corpus schema the steelman/cruxes/bridge LLM stages have nothing honest to operate on.",
+  "user_persona": "Joe Yen, running wintermute automation on his Arch Linux laptop; invokes `concord corpus build '<claim>'` to seed a perspective-diverse source set before feeding it into LLM reasoning stages.",
+  "unfakeable_metric": {
+    "name": "acceptance_tests_passing_count",
+    "lower_is_better": false,
+    "harness_command": "bash scripts/run-metrics.sh",
+    "target": 6
+  },
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "level": "MUST",
+      "description": "`cargo build` and `cargo test` are green in a fresh ~/wintermute/concord workspace; `concord --help` lists the `corpus` subcommand. MSRV 1.85, no let-chains.",
+      "test": "tests/acceptance_ac1.rs — assert `concord --help` exits 0 and output contains 'corpus'"
+    },
+    {
+      "id": "AC2",
+      "level": "MUST",
+      "description": "`concord corpus build '<claim>' --fixtures tests/fixtures/<case>` produces a Corpus JSON validating against the documented schema, with every Source carrying a Stance and a provenance record.",
+      "test": "tests/acceptance_ac2.rs — build with fixture dir, deserialize output, assert schema validity"
+    },
+    {
+      "id": "AC3",
+      "level": "MUST",
+      "description": "The dedup pass collapses a fixture set containing 3 syndicated copies of one article into a single retained Source (asserted in a unit test on the fixture corpus).",
+      "test": "tests/acceptance_ac3.rs — unit test on dedup with fixture containing 3 near-identical sources"
+    },
+    {
+      "id": "AC4",
+      "level": "MUST",
+      "description": "Stance tagging assigns the correct Stance to >=80% of a hand-labelled, independently authored fixture set (>=15 sources spanning >=2 stances). Labels live in checked-in expected.json written before the tagger.",
+      "test": "tests/acceptance_ac4.rs — load fixtures + expected.json, run tagger, assert accuracy >= 0.80"
+    },
+    {
+      "id": "AC5",
+      "level": "MUST",
+      "description": "No code path in the default `build` reaches the network unless a real gatherer is explicitly configured; test suite runs with networking unavailable and passes. A test asserts the FixtureGatherer path performs zero outbound connections.",
+      "test": "tests/acceptance_ac5.rs — run corpus build --fixtures without network, assert exit 0 and no net calls"
+    },
+    {
+      "id": "AC6",
+      "level": "MUST",
+      "description": "`main()` calls `sigpipe::reset()` first; `concord corpus show <file> | head` does not panic.",
+      "test": "tests/acceptance_ac6.rs — pipe concord corpus show through head, assert exit without panic"
+    }
+  ],
+  "scope": [
+    "Cargo workspace at ~/wintermute/concord with concord-corpus lib crate and concord binary",
+    "Source, Stance, Corpus schema (serde JSON-serializable)",
+    "SourceGatherer trait + FixtureGatherer implementation (no outbound network in tests)",
+    "Deterministic rule-based stance tagger (lexical/structural cues)",
+    "Shingled-token Jaccard dedup above tunable threshold",
+    "Rule-based credibility scoring (has-author, has-date, primary-vs-secondary, domain-class)",
+    "CLI: `concord corpus build`, `concord corpus show`, `concord corpus stats`",
+    "SIGPIPE reset in main()"
+  ],
+  "non_goals": [
+    "LLM-based stance refinement (lands in concord-steelman)",
+    "Crux vs misunderstanding classification (lands in concord-cruxes)",
+    "Balanced synthesized brief (lands in concord-bridge)",
+    "Message de-escalation (lands in concord-deescalate)",
+    "Outbound web search/fetch in the default test path (FixtureGatherer only)",
+    "ML-based credibility oracle (rule-based heuristic only, human-overridable)"
+  ],
+  "hard_constraints": {
+    "rust_edition": "2021",
+    "target_kind": "cli",
+    "deny_unsafe": true,
+    "max_deps": 20,
+    "msrv": "1.85",
+    "additional": {
+      "workspace": "true — must be a real cargo workspace so sibling PRDs can add member crates",
+      "no_let_chains": "true — per self_recall_baseline_gate_red, MSRV 1.85 excludes let-chains",
+      "sigpipe_reset": "true — first line of main() per self_sigpipe_panic_toolkit"
+    }
+  },
+  "five_whys_trace": [
+    {
+      "why": 1,
+      "q": "Why build concord-corpus rather than extending an existing research tool?",
+      "a": "Existing research tools (like /deep-research) converge on one answer; concord-corpus inverts that — it deliberately spreads across stances to avoid single-framing collapse."
+    },
+    {
+      "why": 2,
+      "q": "Why does stance-diversity require its own data structure rather than just tagging search results?",
+      "a": "A Corpus is the shared contract for every downstream stage (steelman, cruxes, bridge). Without a stable, tested schema those LLM stages have nothing honest to reason over — they'd be reasoning over raw search results with no provenance."
+    },
+    {
+      "why": 3,
+      "q": "Why must the corpus be LLM-free in this first PRD?",
+      "a": "LLM-free keeps the foundation deterministic and cloud-build-safe. If the schema and dedup are themselves LLM-dependent, validating them is circular — you'd be checking LLM output with LLM output."
+    },
+    {
+      "why": 4,
+      "q": "Why does the workspace need to be a real cargo workspace rather than a standalone crate?",
+      "a": "Four sibling PRDs (steelman, cruxes, bridge, deescalate) are rust-extend PRDs with build_into: ~/wintermute/concord. They add member crates. A standalone crate cannot accept `cargo workspace member` additions cleanly."
+    }
+  ],
+  "ambiguities_resolved": [
+    {
+      "question": "Should rust_edition be 2021 or 2024?",
+      "resolution": "2021 — MSRV is 1.85; edition 2024 requires 1.85+ but the scaffold template defaults to 2024. PRD says 'Rust 2021' explicitly."
+    },
+    {
+      "question": "Where does the binary live relative to the workspace?",
+      "resolution": "The concord binary is a [[bin]] in concord-corpus/Cargo.toml (not a separate crate). Sibling crates (steelman etc.) add their own members. The workspace root Cargo.toml lists members."
+    }
+  ],
+  "created_at": "2026-06-06T04:13:42Z",
+  "intent_slug": "concord-corpus"
+}

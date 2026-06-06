@@ -1,0 +1,18 @@
+[
+  {
+    "title": "Study confirms that coffee reduces risk of type 2 diabetes",
+    "url": "https://ncbi.nlm.nih.gov/pmc/articles/coffee-diabetes-2024",
+    "publisher": "PubMed",
+    "body": "A large meta-analysis confirms that moderate coffee consumption significantly reduces the risk of type 2 diabetes. The research shows overwhelming evidence across multiple cohort studies. Results demonstrate a 25% reduction in risk for those drinking 3-4 cups daily. The study validated findings across diverse populations. Effective mechanisms include antioxidant compounds.",
+    "author": "Dr. Smith et al.",
+    "published_at": "2024-03-15"
+  },
+  {
+    "title": "Critics say coffee health claims are misleading and lack rigorous evidence",
+    "url": "https://skepticalinquirer.org/coffee-claims-debunked",
+    "publisher": "Skeptical Inquirer",
+    "body": "Critics argue that many coffee and health studies are misleading due to confounding variables. Opponents argue there is no evidence of causation, only correlation. The research is disputed by several independent reviewers who question the methodology. Concerns about publication bias undermine the claims. No evidence of a definitive mechanism has been established.",
+    "author": "Jane Doe",
+    "published_at": "2024-04-01"
+  }
+]

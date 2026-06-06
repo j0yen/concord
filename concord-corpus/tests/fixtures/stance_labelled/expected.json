@@ -1,0 +1,77 @@
+[
+  {
+    "url": "https://cdc.gov/vaccines/safety-study-2024",
+    "expected_stance": "Supports",
+    "notes": "Strong confirms/validates/effective signals, no opposing signals"
+  },
+  {
+    "url": "https://libertyforum.org/vaccines-overreach",
+    "expected_stance": "Opposes",
+    "notes": "critics argue, no evidence, concerns, disputed signals dominate"
+  },
+  {
+    "url": "https://historyofmedicine.edu/vaccines-history",
+    "expected_stance": "Background",
+    "notes": "Historical overview, no directional stance signals"
+  },
+  {
+    "url": "https://irena.org/renewable-cost-2024",
+    "expected_stance": "Supports",
+    "notes": "proven, demonstrates, validated, beneficial signals"
+  },
+  {
+    "url": "https://energypolicy.org/renewables-baseload-myth",
+    "expected_stance": "Opposes",
+    "notes": "no evidence, critics say, concerns, risks signals dominate"
+  },
+  {
+    "url": "https://physics-today.edu/solar-cells-physics",
+    "expected_stance": "Background",
+    "notes": "Technical background, no directional signals"
+  },
+  {
+    "url": "https://epi.org/minimum-wage-study-2024",
+    "expected_stance": "Supports",
+    "notes": "confirms, effective, validates, evidence shows signals"
+  },
+  {
+    "url": "https://cato.org/minimum-wage-job-loss",
+    "expected_stance": "Opposes",
+    "notes": "harmful, no evidence, critics argue, opponents argue signals"
+  },
+  {
+    "url": "https://brookings.edu/minimum-wage-review",
+    "expected_stance": "Mixed",
+    "notes": "on the one hand / on the other hand, both sides, balance of evidence signals"
+  },
+  {
+    "url": "https://apa.org/social-media-teens-study",
+    "expected_stance": "Supports",
+    "notes": "confirms, validated, demonstrates, effective intervention signals"
+  },
+  {
+    "url": "https://techpolicy.org/social-media-mental-health-dispute",
+    "expected_stance": "Opposes",
+    "notes": "misleading, no evidence, disputes, critics argue signals"
+  },
+  {
+    "url": "https://pewresearch.org/social-media-overview-2024",
+    "expected_stance": "Background",
+    "notes": "Descriptive overview, no position taken"
+  },
+  {
+    "url": "https://stanford.edu/ubi-experiment-results",
+    "expected_stance": "Supports",
+    "notes": "confirms, validates, proven, positive results signals"
+  },
+  {
+    "url": "https://manhattan-institute.org/ubi-critique",
+    "expected_stance": "Opposes",
+    "notes": "no evidence, risks, critics warn, harmful signals"
+  },
+  {
+    "url": "https://energypost.eu/nuclear-pros-cons-2024",
+    "expected_stance": "Mixed",
+    "notes": "on the one hand / on the other hand, both sides, controversial, competing signals"
+  }
+]
