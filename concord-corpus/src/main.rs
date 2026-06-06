@@ -7,6 +7,11 @@
 //! concord corpus stats <corpus.json>
 //! ```
 
+// Binary entry point: print_stderr (eprintln!) and print_stdout (println!) are
+// intentional for user-facing status messages and output. These are the correct
+// idioms for a CLI — not library code.
+#![allow(clippy::print_stderr, clippy::print_stdout)]
+
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
