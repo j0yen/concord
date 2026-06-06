@@ -1,0 +1,77 @@
+{
+  "claim": "Should cities ban single-use plastics?",
+  "contention_points": [
+    {
+      "id": 0,
+      "description": "Both sides agree that plastic ocean pollution is harmful.",
+      "expected_bucket": "shared_value"
+    },
+    {
+      "id": 1,
+      "description": "Both sides agree that consumer convenience matters.",
+      "expected_bucket": "shared_value"
+    },
+    {
+      "id": 2,
+      "description": "Both sides agree that economic harm to low-income communities should be avoided.",
+      "expected_bucket": "shared_value"
+    },
+    {
+      "id": 3,
+      "description": "Side A says bans reduce plastic waste; side B says bans just shift to alternatives with higher lifecycle emissions. This is a factual question with measurable answers.",
+      "expected_bucket": "crux",
+      "crux_kind": "empirical"
+    },
+    {
+      "id": 4,
+      "description": "Side A prioritizes ecosystem protection over short-term economic cost; side B prioritizes economic freedom over regulatory intervention. Neither side can be settled by evidence alone.",
+      "expected_bucket": "crux",
+      "crux_kind": "value"
+    },
+    {
+      "id": 5,
+      "description": "Side A argues a ban is the most effective policy lever; side B argues market incentives (taxes) work better. This is an empirical question about policy effectiveness.",
+      "expected_bucket": "crux",
+      "crux_kind": "empirical"
+    },
+    {
+      "id": 6,
+      "description": "Side A says bans are justified by externalities; side B says externalities should be priced in, not banned. This is a fundamental difference in the appropriate role of government.",
+      "expected_bucket": "crux",
+      "crux_kind": "value"
+    },
+    {
+      "id": 7,
+      "description": "Side A says 'single-use plastics' means items used once and discarded; side B thinks the debate is about 'all plastic packaging including compostable'. They are answering different questions.",
+      "expected_bucket": "misunderstanding"
+    },
+    {
+      "id": 8,
+      "description": "Side A says the alternatives are 'sustainable'; side B says they're worse lifecycle-wise. 'Sustainable' means different things to each side (carbon vs. marine litter).",
+      "expected_bucket": "misunderstanding"
+    },
+    {
+      "id": 9,
+      "description": "Side A claims bans 'work' citing reduced beach litter; side B claims bans 'don't work' citing unchanged total plastic production. They are measuring different outcomes.",
+      "expected_bucket": "misunderstanding"
+    },
+    {
+      "id": 10,
+      "description": "Whether reduced plastic litter translates to measurable marine biodiversity improvement is an open empirical question.",
+      "expected_bucket": "crux",
+      "crux_kind": "empirical"
+    },
+    {
+      "id": 11,
+      "description": "Whether the burden of cost falls disproportionately on low-income households is an empirical distributional question.",
+      "expected_bucket": "crux",
+      "crux_kind": "empirical"
+    },
+    {
+      "id": 12,
+      "description": "Both sides agree that corporate accountability for waste is desirable in principle.",
+      "expected_bucket": "shared_value"
+    }
+  ],
+  "authorship_note": "Labels authored before classifier implementation per PRD AC3 (feedback_agent_written_fixtures_tautology). Independent human judgment on a city-ban-on-single-use-plastics debate."
+}
