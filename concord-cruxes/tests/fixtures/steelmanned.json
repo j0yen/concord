@@ -1,0 +1,49 @@
+{
+  "claim": "Should cities ban single-use plastics?",
+  "steelmans": [
+    {
+      "stance": "Supports",
+      "claim": "Cities should ban single-use plastics because the market fails to price in the environmental externality of plastic pollution.",
+      "premises": [
+        {
+          "text": "Plastic marine debris harms wildlife and ecosystems in ways that are not reflected in the market price of plastic products.",
+          "cited_source_ids": [0]
+        },
+        {
+          "text": "Voluntary reduction efforts and consumer education have proven insufficient at the scale needed to address the problem.",
+          "cited_source_ids": [1]
+        },
+        {
+          "text": "Municipal bans in cities like San Francisco and Malibu have measurably reduced single-use plastic consumption in those markets.",
+          "cited_source_ids": [2]
+        }
+      ],
+      "conclusion": "Therefore, a targeted municipal ban is a proportionate regulatory response to a demonstrated market failure with significant environmental costs.",
+      "cited_source_ids": [0, 1, 2],
+      "flagged": false,
+      "flag_reason": ""
+    },
+    {
+      "stance": "Opposes",
+      "claim": "Cities should not ban single-use plastics because bans impose costs on low-income residents, displace rather than eliminate pollution, and more effective policy alternatives exist.",
+      "premises": [
+        {
+          "text": "Plastic alternatives (paper, glass, compostable bioplastics) often have higher lifecycle greenhouse-gas emissions per use, meaning bans may increase total environmental harm.",
+          "cited_source_ids": [3]
+        },
+        {
+          "text": "Disproportionate cost burdens fall on low-income households who rely on inexpensive single-use packaging for food safety and cost management.",
+          "cited_source_ids": [4]
+        },
+        {
+          "text": "Extended producer responsibility schemes and Pigouvian taxes on plastic have demonstrated effectiveness in reducing waste without mandating specific alternatives.",
+          "cited_source_ids": [5]
+        }
+      ],
+      "conclusion": "Therefore, a ban is a blunt instrument that may worsen overall outcomes; price-based or producer-responsibility mechanisms are more efficient and equitable.",
+      "cited_source_ids": [3, 4, 5],
+      "flagged": false,
+      "flag_reason": ""
+    }
+  ]
+}

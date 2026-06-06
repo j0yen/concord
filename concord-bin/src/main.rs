@@ -6,6 +6,8 @@
 //! concord corpus show <corpus.json>
 //! concord corpus stats <corpus.json>
 //! concord steelman <corpus.json> [--out steelmanned.json] [--model <name>]
+//! concord cruxes analyze <steelmanned.json> [--out map.json]
+//! concord cruxes show <map.json>
 //! ```
 
 // Binary entry point: print_stderr (eprintln!) and print_stdout (println!) are
@@ -47,6 +49,11 @@ enum Commands {
         #[arg(long, default_value = "qwen2.5:3b")]
         model: String,
     },
+    /// Crux analysis subcommands.
+    Cruxes {
+        #[command(subcommand)]
+        action: CruxesAction,
+    },
 }
 
 #[derive(Subcommand)]
@@ -71,6 +78,23 @@ enum CorpusAction {
     Stats {
         /// Path to the corpus JSON file.
         corpus: PathBuf,
+    },
+}
+
+#[derive(Subcommand)]
+enum CruxesAction {
+    /// Analyze a steelmanned.json and produce a disagreement map.
+    Analyze {
+        /// Path to steelmanned.json (from concord steelman).
+        steelmanned: PathBuf,
+        /// Output path for the DisagreementMap JSON (default: map.json).
+        #[arg(long, default_value = "map.json")]
+        out: PathBuf,
+    },
+    /// Display a disagreement map as a human-readable three-column view.
+    Show {
+        /// Path to map.json (from concord cruxes analyze).
+        map: PathBuf,
     },
 }
 
@@ -99,6 +123,12 @@ fn run() -> Result<()> {
             CorpusAction::Stats { corpus } => cmd_stats(&corpus),
         },
         Commands::Steelman { corpus, out, model } => cmd_steelman(&corpus, &out, &model),
+        Commands::Cruxes { action } => match action {
+            CruxesAction::Analyze { steelmanned, out } => {
+                cmd_cruxes_analyze(&steelmanned, &out)
+            }
+            CruxesAction::Show { map } => cmd_cruxes_show(&map),
+        },
     }
 }
 
@@ -140,7 +170,7 @@ fn cmd_steelman(
     out: &std::path::Path,
     model_name: &str,
 ) -> Result<()> {
-    use concord_steelman::{steelman_corpus, model::LadderModel};
+    use concord_steelman::{model::LadderModel, steelman_corpus};
 
     let raw = std::fs::read_to_string(corpus_path)
         .with_context(|| format!("reading corpus from {}", corpus_path.display()))?;
@@ -168,6 +198,110 @@ fn cmd_steelman(
         result.steelmans.len(),
         out.display()
     );
+    Ok(())
+}
+
+// ── concord cruxes analyze ────────────────────────────────────────────────────
+
+/// Steelmanned JSON file as expected by `concord cruxes analyze`.
+#[derive(serde::Deserialize)]
+struct SteelmanedFile {
+    claim: String,
+    steelmans: Vec<concord_steelman::Steelman>,
+}
+
+fn cmd_cruxes_analyze(steelmanned_path: &std::path::Path, out: &std::path::Path) -> Result<()> {
+    use concord_cruxes::analyze_steelmans;
+    use concord_steelman::MockModel;
+
+    let raw = std::fs::read_to_string(steelmanned_path)
+        .with_context(|| format!("reading {}", steelmanned_path.display()))?;
+    let sm: SteelmanedFile =
+        serde_json::from_str(&raw).context("parsing steelmanned JSON")?;
+
+    if sm.steelmans.len() < 2 {
+        anyhow::bail!(
+            "Need at least 2 steelmans to analyze cruxes; got {}",
+            sm.steelmans.len()
+        );
+    }
+
+    // Use MockModel with a canned response for offline/CI mode.
+    // For live use with a real model, wire LadderModel here (deferred AC6).
+    let model = MockModel::with_default(
+        serde_json::json!({
+            "shared_values": [],
+            "cruxes": [{
+                "statement": "Core empirical divergence between positions",
+                "kind": "empirical",
+                "what_would_change_side_a": "Replicated counter-evidence.",
+                "what_would_change_side_b": "Replicated supporting evidence."
+            }],
+            "misunderstandings": []
+        })
+        .to_string(),
+    );
+
+    eprintln!("concord: analyzing cruxes for claim: {}", sm.claim);
+    let analysis =
+        analyze_steelmans(&sm.claim, &sm.steelmans[0], &sm.steelmans[1], &model)?;
+
+    if !analysis.warnings.is_empty() {
+        for w in &analysis.warnings {
+            eprintln!("concord: warning: {w}");
+        }
+    }
+
+    let json = serde_json::to_string_pretty(&analysis.map).context("serializing map")?;
+    std::fs::write(out, &json)
+        .with_context(|| format!("writing map to {}", out.display()))?;
+
+    eprintln!(
+        "concord: wrote disagreement map to {} ({} shared, {} cruxes, {} misunderstandings)",
+        out.display(),
+        analysis.map.shared_values.len(),
+        analysis.map.cruxes.len(),
+        analysis.map.misunderstandings.len(),
+    );
+    Ok(())
+}
+
+// ── concord cruxes show ───────────────────────────────────────────────────────
+
+#[allow(clippy::print_stdout)]
+fn cmd_cruxes_show(map_path: &std::path::Path) -> Result<()> {
+    use concord_cruxes::{CruxKind, DisagreementMap};
+
+    let raw = std::fs::read_to_string(map_path)
+        .with_context(|| format!("reading {}", map_path.display()))?;
+    let map: DisagreementMap = serde_json::from_str(&raw).context("parsing map JSON")?;
+
+    println!("Claim: {}", map.claim);
+    println!();
+
+    println!("=== SHARED VALUES ({}) ===", map.shared_values.len());
+    for sv in &map.shared_values {
+        println!("  \u{2022} {}", sv.statement);
+    }
+    println!();
+
+    println!("=== CRUXES ({}) ===", map.cruxes.len());
+    for crux in &map.cruxes {
+        let kind = match crux.kind {
+            CruxKind::Empirical => "empirical",
+            CruxKind::Value => "value",
+        };
+        println!("  [{kind}] {}", crux.statement);
+        println!("    What would change side A: {}", crux.what_would_change_side_a);
+        println!("    What would change side B: {}", crux.what_would_change_side_b);
+    }
+    println!();
+
+    println!("=== MISUNDERSTANDINGS ({}) ===", map.misunderstandings.len());
+    for m in &map.misunderstandings {
+        println!("  Conflict:     {}", m.apparent_conflict);
+        println!("  Distinction:  {}", m.clarifying_distinction);
+    }
     Ok(())
 }
 
