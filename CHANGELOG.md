@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.3.0 — concord-cruxes
+
+Add concord-cruxes: disagreement map engine separating positions into shared
+values, genuine cruxes (empirical/value-tagged with change-minds fields), and
+terminological misunderstandings. Output is DisagreementMap JSON, input for
+concord-bridge. Wires `concord cruxes analyze/show` into concord-bin. Includes
+independently authored held-out fixture (13 labeled points) for accuracy gate
+at ≥70%. All ACs 1-5 met; AC6 deferred (live model). 22 new tests green.
+
 ## v0.2.0 — concord-steelman (parallel integrate)
 
 Add concord-steelman: steelman engine for perspective-diverse argument analysis.
