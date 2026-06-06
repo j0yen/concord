@@ -1,0 +1,4 @@
+/target/
+concord-corpus/target/
+*.lock.swp
+.DS_Store
