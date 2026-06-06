@@ -20,7 +20,13 @@
 use crate::gatherer::RawDocument;
 
 /// Score the credibility of a [`RawDocument`] and return a value in \[0.0, 1.0\].
+///
+/// Uses floating-point accumulation of fixed weights. `float_arithmetic` and
+/// `as_conversions` are intentionally allowed here — the scoring algorithm is
+/// a fixed-weight sum over boolean signals; the imprecision is acceptable for a
+/// documented heuristic.
 #[must_use]
+#[allow(clippy::float_arithmetic)]
 pub fn score_credibility(doc: &RawDocument) -> f32 {
     let mut score: f32 = 0.0;
 

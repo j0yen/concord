@@ -38,8 +38,14 @@ pub fn dedup_sources(sources: Vec<Source>, threshold: f64) -> Vec<Source> {
         .collect();
 
     let n = sources.len();
+    // `kept` is indexed by position in `sources`; length equals `sources.len()`,
+    // so `kept[i]` and `kept[j]` are always in-bounds for i,j < n.
+    // `shingle_sets` has the same length.
+    // We allow indexing_slicing here because the invariant is trivially maintained.
+    #[allow(clippy::indexing_slicing)]
     let mut kept = vec![true; n]; // which sources survive
 
+    #[allow(clippy::indexing_slicing)]
     for i in 0..n {
         if !kept[i] {
             continue;
@@ -54,18 +60,19 @@ pub fn dedup_sources(sources: Vec<Source>, threshold: f64) -> Vec<Source> {
                 if sources[j].credibility > sources[i].credibility {
                     kept[i] = false;
                     break; // i is gone; no point checking further j's for i
-                } else {
-                    kept[j] = false;
                 }
+                kept[j] = false;
             }
         }
     }
 
-    sources
+    #[allow(clippy::indexing_slicing)]
+    let result = sources
         .into_iter()
         .enumerate()
         .filter_map(|(i, s)| if kept[i] { Some(s) } else { None })
-        .collect()
+        .collect();
+    result
 }
 
 /// Normalise text for shingle computation: lowercase, collapse whitespace.
@@ -90,6 +97,13 @@ fn shingles(text: &str, k: usize) -> std::collections::HashSet<String> {
 }
 
 /// Jaccard similarity between two shingle sets: |A ∩ B| / |A ∪ B|.
+// as_conversions / cast_precision_loss: usize→f64 for ratio; sets are corpus-sized
+// (small), so precision loss is not a concern. float_arithmetic: intentional ratio.
+#[allow(
+    clippy::as_conversions,
+    clippy::cast_precision_loss,
+    clippy::float_arithmetic
+)]
 fn jaccard(a: &std::collections::HashSet<String>, b: &std::collections::HashSet<String>) -> f64 {
     if a.is_empty() && b.is_empty() {
         return 1.0;

@@ -82,6 +82,16 @@ impl Corpus {
     }
 }
 
+// Summarize stances: float arithmetic is intentional for heuristic mean credibility.
+// as_conversions / cast_precision_loss: usize→f64 precision loss is acceptable here
+// (corpus sizes are small, scores are heuristic); cast_possible_truncation: f64→f32
+// is intentional (credibility is a [0,1] heuristic, f32 precision is sufficient).
+#[allow(
+    clippy::float_arithmetic,
+    clippy::as_conversions,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation
+)]
 fn summarize_stances(sources: &[Source]) -> Vec<StanceSummary> {
     use std::collections::HashMap;
 
@@ -103,7 +113,6 @@ fn summarize_stances(sources: &[Source]) -> Vec<StanceSummary> {
                 "Mixed" => Stance::Mixed,
                 _ => Stance::Background,
             };
-            #[allow(clippy::as_conversions, clippy::cast_possible_truncation)]
             let mean_credibility = (cred_sum / count as f64) as f32;
             StanceSummary {
                 stance,

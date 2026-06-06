@@ -117,6 +117,8 @@ fn cmd_build(
     Ok(())
 }
 
+// print_stdout: these functions are the user-facing display; println! is correct here.
+#[allow(clippy::print_stdout)]
 fn cmd_show(corpus_path: &std::path::Path) -> Result<()> {
     let raw = std::fs::read_to_string(corpus_path)
         .with_context(|| format!("reading {}", corpus_path.display()))?;
@@ -155,6 +157,7 @@ fn cmd_show(corpus_path: &std::path::Path) -> Result<()> {
     Ok(())
 }
 
+#[allow(clippy::print_stdout)]
 fn cmd_stats(corpus_path: &std::path::Path) -> Result<()> {
     let raw = std::fs::read_to_string(corpus_path)
         .with_context(|| format!("reading {}", corpus_path.display()))?;

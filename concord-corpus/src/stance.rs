@@ -111,6 +111,15 @@ const MIXED_SIGNALS: &[&str] = &[
 /// Returns a `(Stance, label)` pair where `label` is a brief rationale string
 /// (useful for debugging / display, not stored in the final schema).
 #[must_use]
+// Float arithmetic and usize→f64/i32 casts are intentional in the ratio computation
+// below. Corpus sizes are small (≪2^52 signals), so precision/wrap is not a concern.
+#[allow(
+    clippy::float_arithmetic,
+    clippy::as_conversions,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_possible_wrap
+)]
 pub fn tag_stance(title: &str, full_text: &str) -> (Stance, String) {
     let haystack = format!("{} {}", title, full_text).to_lowercase();
 
