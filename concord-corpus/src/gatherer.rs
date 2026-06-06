@@ -35,7 +35,7 @@ pub struct RawDocument {
 /// canonical no-network implementation used in tests and offline runs.
 pub trait SourceGatherer: Send + Sync {
     /// Return a human-readable name for this gatherer (used in provenance records).
-    fn name(&self) -> &str;
+    fn name(&self) -> &'static str;
 
     /// Gather documents relevant to `query`.
     ///
@@ -77,7 +77,7 @@ impl FixtureGatherer {
 }
 
 impl SourceGatherer for FixtureGatherer {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "fixture"
     }
 

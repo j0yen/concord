@@ -121,7 +121,7 @@ const MIXED_SIGNALS: &[&str] = &[
     clippy::cast_possible_wrap
 )]
 pub fn tag_stance(title: &str, full_text: &str) -> (Stance, String) {
-    let haystack = format!("{} {}", title, full_text).to_lowercase();
+    let haystack = format!("{title} {full_text}").to_lowercase();
 
     let supports_score = count_signals(&haystack, SUPPORTS_SIGNALS);
     let opposes_score = count_signals(&haystack, OPPOSES_SIGNALS);
