@@ -1,25 +1,22 @@
 [package]
-name = "concord-corpus"
+name = "concord-steelman"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 publish = false
-description = "Perspective-diverse source corpus builder for the concord workspace"
+description = "Steelman engine for the concord workspace — produces the strongest good-faith version of each stance"
 
 [lints]
 workspace = true
 
 [dependencies]
-# JSON serialization
+concord-corpus = { path = "../concord-corpus" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-# Timestamps
-chrono = { version = "0.4", default-features = false, features = ["serde", "clock"] }
-# Error handling
 anyhow = "1"
+chrono = { version = "0.4", default-features = false, features = ["serde", "clock"] }
 
 [dev-dependencies]
-proptest = "1"
 tempfile = "3"
