@@ -103,11 +103,12 @@ fn summarize_stances(sources: &[Source]) -> Vec<StanceSummary> {
                 "Mixed" => Stance::Mixed,
                 _ => Stance::Background,
             };
+            #[allow(clippy::as_conversions, clippy::cast_possible_truncation)]
+            let mean_credibility = (cred_sum / count as f64) as f32;
             StanceSummary {
                 stance,
                 count,
-                #[allow(clippy::cast_possible_truncation)]
-                mean_credibility: (cred_sum / count as f64) as f32,
+                mean_credibility,
             }
         })
         .collect();

@@ -7,11 +7,6 @@
 //! concord corpus stats <corpus.json>
 //! ```
 
-// SIGPIPE reset MUST be the very first thing in main() so that
-// `concord corpus show <file> | head` does not panic with a broken-pipe
-// error. See: self_sigpipe_panic_toolkit memory note.
-use sigpipe;
-
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
@@ -64,6 +59,7 @@ enum CorpusAction {
 
 fn main() -> std::process::ExitCode {
     // SIGPIPE reset — must be first. Prevents panic on broken pipe (e.g. | head).
+    // See: self_sigpipe_panic_toolkit memory note.
     sigpipe::reset();
 
     match run() {
@@ -122,8 +118,6 @@ fn cmd_build(
 }
 
 fn cmd_show(corpus_path: &std::path::Path) -> Result<()> {
-    use tabled::{Table, Tabled};
-
     let raw = std::fs::read_to_string(corpus_path)
         .with_context(|| format!("reading {}", corpus_path.display()))?;
     let corpus: concord_corpus::Corpus =
@@ -133,31 +127,31 @@ fn cmd_show(corpus_path: &std::path::Path) -> Result<()> {
     println!("Sources: {}", corpus.source_count());
     println!();
 
-    #[derive(Tabled)]
-    struct Row {
-        #[tabled(rename = "Stance")]
-        stance: String,
-        #[tabled(rename = "Credibility")]
-        credibility: String,
-        #[tabled(rename = "Publisher")]
-        publisher: String,
-        #[tabled(rename = "Title")]
-        title: String,
+    // Hand-rolled ASCII table (avoids tabled crate's MSRV-1.86 transitive deps).
+    let col_widths = (10usize, 6usize, 22usize, 52usize);
+    let sep = format!(
+        "+-{}-+-{}-+-{}-+-{}-+",
+        "-".repeat(col_widths.0),
+        "-".repeat(col_widths.1),
+        "-".repeat(col_widths.2),
+        "-".repeat(col_widths.3),
+    );
+    println!("{sep}");
+    println!(
+        "| {:<10} | {:<6} | {:<22} | {:<52} |",
+        "Stance", "Cred", "Publisher", "Title"
+    );
+    println!("{sep}");
+    for s in &corpus.sources {
+        println!(
+            "| {:<10} | {:<6} | {:<22} | {:<52} |",
+            truncate(&s.stance.to_string(), col_widths.0),
+            format!("{:.2}", s.credibility),
+            truncate(&s.publisher, col_widths.2),
+            truncate(&s.title, col_widths.3),
+        );
     }
-
-    let rows: Vec<Row> = corpus
-        .sources
-        .iter()
-        .map(|s| Row {
-            stance: s.stance.to_string(),
-            credibility: format!("{:.2}", s.credibility),
-            publisher: truncate(&s.publisher, 20),
-            title: truncate(&s.title, 50),
-        })
-        .collect();
-
-    let table = Table::new(rows).to_string();
-    println!("{table}");
+    println!("{sep}");
     Ok(())
 }
 

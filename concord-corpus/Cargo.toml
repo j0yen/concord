@@ -25,12 +25,9 @@ serde_json = "1"
 chrono = { version = "0.4", default-features = false, features = ["serde", "clock"] }
 # SIGPIPE handling
 sigpipe = "0.1"
-# URL parsing / normalization for dedup
-url = "2"
 # Error handling
 anyhow = "1"
-# Table display for `corpus show`
-tabled = { version = "0.15", default-features = false, features = ["std"] }
+# (table display is hand-rolled in main.rs to avoid MSRV-incompatible transitive deps)
 
 [dev-dependencies]
 proptest = "1"
