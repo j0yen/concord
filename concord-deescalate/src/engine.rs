@@ -66,7 +66,7 @@ pub fn deescalate(
 
     // ── 2. Contempt-lexicon check ────────────────────────────────────────────
     let contempt = check_contempt(&input.message, &[]);
-    let contempt_terms_found = contempt.found.clone();
+    let contempt_terms_found = contempt.found;
 
     // ── 3. Ask extraction ────────────────────────────────────────────────────
     let asks = extract_asks_with_model(&input.message, model)?;
@@ -117,17 +117,18 @@ fn parse_explain_response(response: &str) -> Vec<ExplainEntry> {
     }
 
     // Fallback: wrap the raw text.
-    if !response.trim().is_empty() {
+    if response.trim().is_empty() {
+        Vec::new()
+    } else {
         vec![ExplainEntry {
             change: response.trim().to_string(),
             reason: "(model did not return structured JSON)".to_string(),
         }]
-    } else {
-        Vec::new()
     }
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used, clippy::unwrap_used, clippy::indexing_slicing)]
 mod tests {
     use concord_steelman::MockModel;
 

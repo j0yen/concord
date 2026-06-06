@@ -4,6 +4,10 @@
 //! This is the top-level test entry file; cargo will show `Running tests/integration.rs`
 //! in output (per `self_orphaned_mock_tests` memory note).
 
+// Test files intentionally use expect/unwrap — panicking on unexpected errors is
+// the correct behaviour in unit/integration tests.
+#![allow(clippy::expect_used, clippy::unwrap_used)]
+
 use concord_deescalate::{deescalate, DeescalateError, DeescalateInput};
 use concord_steelman::MockModel;
 

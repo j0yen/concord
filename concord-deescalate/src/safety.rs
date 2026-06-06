@@ -51,7 +51,7 @@ pub enum SafetyCheck {
 impl SafetyCheck {
     /// Returns `true` if it is safe to proceed with rephrasing.
     #[must_use]
-    pub fn is_safe(&self) -> bool {
+    pub const fn is_safe(&self) -> bool {
         matches!(self, Self::Safe)
     }
 }

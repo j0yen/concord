@@ -176,13 +176,14 @@ checksum = "1d07550c9036bf2ae0c684c4297d503f838287c83c53686d05370d0e139ae570"
 
 [[package]]
 name = "concord-bin"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "chrono",
  "clap",
  "concord-corpus",
  "concord-cruxes",
+ "concord-deescalate",
  "concord-steelman",
  "proptest",
  "serde",
@@ -193,7 +194,7 @@ dependencies = [
 
 [[package]]
 name = "concord-corpus"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -205,7 +206,7 @@ dependencies = [
 
 [[package]]
 name = "concord-cruxes"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -216,8 +217,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "concord-deescalate"
+version = "0.4.0"
+dependencies = [
+ "anyhow",
+ "concord-steelman",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "concord-steelman"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "chrono",

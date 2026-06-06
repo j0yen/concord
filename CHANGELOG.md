@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.4.0 — 2026-06-06
+
+Add concord-deescalate: de-escalation engine that rephrases heated messages into
+NVC (observation/feeling/need/request) form while preserving every substantive
+ask. Includes contempt lexicon (deterministic, extensible), rule-based +
+model-assisted ask extraction, ask-preservation post-check, safety boundary
+(refuses threats/harassment), and `concord deescalate` CLI subcommand with
+--explain mode. All ACs 1-6 met; AC7 deferred (live model). 27 tests green,
+cloud-build-safe (MockModel only).
+
 ## v0.3.0 — concord-cruxes
 
 Add concord-cruxes: disagreement map engine separating positions into shared
