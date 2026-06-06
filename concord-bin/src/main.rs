@@ -8,6 +8,7 @@
 //! concord steelman <corpus.json> [--out steelmanned.json] [--model <name>]
 //! concord cruxes analyze <steelmanned.json> [--out map.json]
 //! concord cruxes show <map.json>
+//! concord deescalate [--in msg.txt | "<message>"] [--model <name>] [--explain]
 //! ```
 
 // Binary entry point: print_stderr (eprintln!) and print_stdout (println!) are
@@ -53,6 +54,21 @@ enum Commands {
     Cruxes {
         #[command(subcommand)]
         action: CruxesAction,
+    },
+    /// Rephrase a heated message into calm, non-inflammatory form.
+    Deescalate {
+        /// The message to rephrase (use `-` to read from stdin, or omit for --in).
+        #[arg(conflicts_with = "file")]
+        message: Option<String>,
+        /// Path to a file containing the message to rephrase.
+        #[arg(long = "in", value_name = "FILE")]
+        file: Option<PathBuf>,
+        /// Ollama model name to use (default: qwen2.5:3b).
+        #[arg(long, default_value = "qwen2.5:3b")]
+        model: String,
+        /// Print an explanation of each change made.
+        #[arg(long)]
+        explain: bool,
     },
 }
 
@@ -129,6 +145,9 @@ fn run() -> Result<()> {
             }
             CruxesAction::Show { map } => cmd_cruxes_show(&map),
         },
+        Commands::Deescalate { message, file, model, explain } => {
+            cmd_deescalate(message.as_deref(), file.as_deref(), &model, explain)
+        }
     }
 }
 
@@ -365,6 +384,80 @@ fn cmd_stats(corpus_path: &std::path::Path) -> Result<()> {
             s.mean_credibility
         );
     }
+    Ok(())
+}
+
+// ── concord deescalate ────────────────────────────────────────────────────────
+
+#[allow(clippy::print_stdout)]
+fn cmd_deescalate(
+    message: Option<&str>,
+    file: Option<&std::path::Path>,
+    model_name: &str,
+    explain: bool,
+) -> Result<()> {
+    use concord_deescalate::{DeescalateError, DeescalateInput};
+    use concord_steelman::model::LadderModel;
+
+    // Resolve the input message.
+    let raw_message = match (message, file) {
+        (Some(msg), None) => msg.to_string(),
+        (None, Some(path)) => std::fs::read_to_string(path)
+            .with_context(|| format!("reading message from {}", path.display()))?,
+        (None, None) => {
+            // Read from stdin.
+            use std::io::Read;
+            let mut buf = String::new();
+            std::io::stdin()
+                .read_to_string(&mut buf)
+                .context("reading message from stdin")?;
+            buf
+        }
+        (Some(_), Some(_)) => {
+            anyhow::bail!("provide either a message argument or --in FILE, not both");
+        }
+    };
+
+    let input = DeescalateInput::from_message(raw_message.trim());
+
+    eprintln!("concord: de-escalating with model '{model_name}'");
+    eprintln!("concord: note — LadderModel is a stub; wire wintermute-brain for live inference");
+
+    let model = LadderModel::new(model_name);
+    let out = concord_deescalate::deescalate(&input, &model, explain).map_err(|e| {
+        // Surface SafetyDeclined as a clear user-facing error.
+        if let Some(DeescalateError::SafetyDeclined { message: msg }) =
+            e.downcast_ref::<DeescalateError>()
+        {
+            anyhow::anyhow!("{msg}")
+        } else {
+            e
+        }
+    })?;
+
+    if !out.contempt_terms_found.is_empty() {
+        eprintln!(
+            "concord: contempt terms found: {}",
+            out.contempt_terms_found.join(", ")
+        );
+    }
+    if !out.asks_preserved {
+        eprintln!(
+            "concord: warning — post-check flagged missing asks: {}",
+            out.missing_asks.join("; ")
+        );
+    }
+
+    println!("{}", out.rephrase);
+
+    if explain && !out.explain.is_empty() {
+        println!();
+        println!("--- Changes ---");
+        for entry in &out.explain {
+            println!("• {} ({})", entry.change, entry.reason);
+        }
+    }
+
     Ok(())
 }
 

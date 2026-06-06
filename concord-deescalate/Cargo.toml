@@ -1,0 +1,20 @@
+[package]
+name = "concord-deescalate"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+description = "De-escalation engine for concord — rephrases heated messages preserving every substantive ask"
+
+[lints]
+workspace = true
+
+[dependencies]
+concord-steelman = { path = "../concord-steelman" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+
+[dev-dependencies]
