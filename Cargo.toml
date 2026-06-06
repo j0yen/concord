@@ -1,5 +1,5 @@
 [workspace]
-members = ["concord-corpus"]
+members = ["concord-corpus", "concord-steelman", "concord-bin"]
 resolver = "2"
 
 [workspace.package]
@@ -38,3 +38,14 @@ print_stderr = "warn"
 module_name_repetitions = "allow"
 missing_errors_doc = "warn"
 missing_panics_doc = "warn"
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"
+panic = "abort"

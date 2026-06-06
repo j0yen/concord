@@ -5,6 +5,7 @@
 //! concord corpus build "<claim>" [--fixtures <dir>] [--out corpus.json]
 //! concord corpus show <corpus.json>
 //! concord corpus stats <corpus.json>
+//! concord steelman <corpus.json> [--out steelmanned.json] [--model <name>]
 //! ```
 
 // Binary entry point: print_stderr (eprintln!) and print_stdout (println!) are
@@ -34,6 +35,17 @@ enum Commands {
     Corpus {
         #[command(subcommand)]
         action: CorpusAction,
+    },
+    /// Steelman every stance in a corpus using a local LLM.
+    Steelman {
+        /// Path to the input corpus JSON file.
+        corpus: PathBuf,
+        /// Output path for the steelmanned JSON (default: steelmanned.json).
+        #[arg(long, default_value = "steelmanned.json")]
+        out: PathBuf,
+        /// Ollama model name to use (default: qwen2.5:3b).
+        #[arg(long, default_value = "qwen2.5:3b")]
+        model: String,
     },
 }
 
@@ -86,6 +98,7 @@ fn run() -> Result<()> {
             CorpusAction::Show { corpus } => cmd_show(&corpus),
             CorpusAction::Stats { corpus } => cmd_stats(&corpus),
         },
+        Commands::Steelman { corpus, out, model } => cmd_steelman(&corpus, &out, &model),
     }
 }
 
@@ -117,6 +130,42 @@ fn cmd_build(
     eprintln!(
         "concord: wrote {} source(s) to {}",
         corpus.source_count(),
+        out.display()
+    );
+    Ok(())
+}
+
+fn cmd_steelman(
+    corpus_path: &std::path::Path,
+    out: &std::path::Path,
+    model_name: &str,
+) -> Result<()> {
+    use concord_steelman::{steelman_corpus, model::LadderModel};
+
+    let raw = std::fs::read_to_string(corpus_path)
+        .with_context(|| format!("reading corpus from {}", corpus_path.display()))?;
+    let corpus: concord_corpus::Corpus =
+        serde_json::from_str(&raw).context("parsing corpus JSON")?;
+
+    eprintln!("concord: steelmanning {} stance(s) using model '{model_name}'", corpus.stances.len());
+    eprintln!("concord: note — LadderModel is a stub; wire wintermute-brain for live inference");
+
+    let model = LadderModel::new(model_name);
+    let result = steelman_corpus(&corpus, &model)
+        .context("steelman engine failed")?;
+
+    let payload = serde_json::json!({
+        "corpus": result.corpus,
+        "steelmans": result.steelmans,
+    });
+    let json = serde_json::to_string_pretty(&payload)
+        .context("serializing steelmanned output to JSON")?;
+    std::fs::write(out, &json)
+        .with_context(|| format!("writing steelmanned output to {}", out.display()))?;
+
+    eprintln!(
+        "concord: wrote {} steelman(s) to {}",
+        result.steelmans.len(),
         out.display()
     );
     Ok(())
