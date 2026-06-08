@@ -20,6 +20,7 @@ concord-corpus = { path = "../concord-corpus" }
 concord-steelman = { path = "../concord-steelman" }
 concord-cruxes = { path = "../concord-cruxes" }
 concord-deescalate = { path = "../concord-deescalate" }
+concord-bridge = { path = "../concord-bridge" }
 # CLI parsing
 clap = { version = "4", features = ["derive"] }
 # JSON serialization

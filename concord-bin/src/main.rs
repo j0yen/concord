@@ -8,6 +8,8 @@
 //! concord steelman <corpus.json> [--out steelmanned.json] [--model <name>]
 //! concord cruxes analyze <steelmanned.json> [--out map.json]
 //! concord cruxes show <map.json>
+//! concord bridge <map.json> [--out brief.md] [--model <name>]
+//! concord run "<claim>" --fixtures <dir> [--out brief.md]
 //! concord deescalate [--in msg.txt | "<message>"] [--model <name>] [--explain]
 //! ```
 
@@ -54,6 +56,28 @@ enum Commands {
     Cruxes {
         #[command(subcommand)]
         action: CruxesAction,
+    },
+    /// Synthesize a balanced brief from a disagreement map.
+    Bridge {
+        /// Path to map.json produced by `concord cruxes analyze`.
+        map: PathBuf,
+        /// Output path for brief.md (default: brief.md).
+        #[arg(long, default_value = "brief.md")]
+        out: PathBuf,
+        /// Ollama model name to use (default: qwen2.5:3b).
+        #[arg(long, default_value = "qwen2.5:3b")]
+        model: String,
+    },
+    /// Run the full pipeline: corpus → steelman → cruxes → bridge.
+    Run {
+        /// The contested claim to analyse.
+        claim: String,
+        /// Directory of fixture sources (offline mode, no network).
+        #[arg(long)]
+        fixtures: PathBuf,
+        /// Output path for brief.md (default: brief.md).
+        #[arg(long, default_value = "brief.md")]
+        out: PathBuf,
     },
     /// Rephrase a heated message into calm, non-inflammatory form.
     Deescalate {
@@ -145,6 +169,8 @@ fn run() -> Result<()> {
             }
             CruxesAction::Show { map } => cmd_cruxes_show(&map),
         },
+        Commands::Bridge { map, out, model } => cmd_bridge(&map, &out, &model),
+        Commands::Run { claim, fixtures, out } => cmd_run(&claim, &fixtures, &out),
         Commands::Deescalate { message, file, model, explain } => {
             cmd_deescalate(message.as_deref(), file.as_deref(), &model, explain)
         }
@@ -458,6 +484,100 @@ fn cmd_deescalate(
         }
     }
 
+    Ok(())
+}
+
+// ── concord bridge ────────────────────────────────────────────────────────────
+
+fn cmd_bridge(map_path: &std::path::Path, out: &std::path::Path, _model_name: &str) -> Result<()> {
+    use concord_bridge::{synthesize_brief, MockBridgeModel};
+    use concord_cruxes::DisagreementMap;
+
+    let raw = std::fs::read_to_string(map_path)
+        .with_context(|| format!("reading {}", map_path.display()))?;
+    let map: DisagreementMap = serde_json::from_str(&raw).context("parsing map JSON")?;
+
+    // Use placeholder model for offline/stub mode.
+    // For live use with a real model, wire LadderModel here (deferred AC7).
+    let model = MockBridgeModel::new_placeholder();
+    eprintln!("concord: synthesizing brief from {} crux(es)…", map.cruxes.len());
+    let brief = synthesize_brief(&map, &model)?;
+
+    std::fs::write(out, &brief.markdown)
+        .with_context(|| format!("writing brief to {}", out.display()))?;
+
+    eprintln!("concord: wrote brief to {}", out.display());
+    if !brief.balance_ok {
+        eprintln!(
+            "concord: WARNING — brief failed balance check: {}",
+            brief.balance_failures.join("; ")
+        );
+    }
+    Ok(())
+}
+
+// ── concord run (full pipeline) ───────────────────────────────────────────────
+
+fn cmd_run(claim: &str, fixtures: &std::path::Path, out: &std::path::Path) -> Result<()> {
+    use concord_bridge::{synthesize_brief, MockBridgeModel};
+    use concord_corpus::{build_corpus_default, FixtureGatherer};
+    use concord_cruxes::analyze_steelmans;
+    use concord_steelman::{steelman_corpus, MockModel};
+
+    eprintln!("concord run: step 1/4 — building corpus…");
+    let gatherer = FixtureGatherer::new(fixtures)?;
+    let corpus = build_corpus_default(claim, &gatherer)?;
+    eprintln!("  {} source(s) gathered", corpus.source_count());
+
+    eprintln!("concord run: step 2/4 — steelmanning…");
+    let steelman_model = MockModel::with_default(
+        "CLAIM: [Live model required]\nPREMISE: [no premises]\nCONCLUSION: [Live model required]",
+    );
+    let result = steelman_corpus(&corpus, &steelman_model)?;
+    eprintln!("  {} steelman(s) generated", result.steelmans.len());
+
+    eprintln!("concord run: step 3/4 — mapping cruxes…");
+    let map = if result.steelmans.len() >= 2 {
+        let crux_model = MockModel::with_default(
+            serde_json::json!({
+                "shared_values": [],
+                "cruxes": [{
+                    "statement": "Core empirical divergence between positions",
+                    "kind": "empirical",
+                    "what_would_change_side_a": "Replicated counter-evidence.",
+                    "what_would_change_side_b": "Replicated supporting evidence."
+                }],
+                "misunderstandings": []
+            })
+            .to_string(),
+        );
+        let analysis = analyze_steelmans(
+            claim,
+            &result.steelmans[0],
+            &result.steelmans[1],
+            &crux_model,
+        )?;
+        eprintln!(
+            "  {} shared, {} cruxes, {} misunderstandings",
+            analysis.map.shared_values.len(),
+            analysis.map.cruxes.len(),
+            analysis.map.misunderstandings.len()
+        );
+        analysis.map
+    } else {
+        concord_cruxes::DisagreementMap::new(claim)
+    };
+
+    eprintln!("concord run: step 4/4 — synthesizing brief…");
+    let bridge_model = MockBridgeModel::new_placeholder();
+    let brief = synthesize_brief(&map, &bridge_model)?;
+
+    std::fs::write(out, &brief.markdown)
+        .with_context(|| format!("writing brief to {}", out.display()))?;
+    eprintln!("concord run: done — wrote brief to {}", out.display());
+    if !brief.balance_ok {
+        eprintln!("concord run: WARNING — brief failed balance check");
+    }
     Ok(())
 }
 

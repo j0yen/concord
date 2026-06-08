@@ -1,5 +1,5 @@
 [workspace]
-members = ["concord-corpus", "concord-steelman", "concord-bin", "concord-cruxes", "concord-deescalate"]
+members = ["concord-corpus", "concord-steelman", "concord-bin", "concord-cruxes", "concord-deescalate", "concord-bridge"]
 resolver = "2"
 
 [workspace.package]
