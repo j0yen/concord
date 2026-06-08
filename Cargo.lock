@@ -181,6 +181,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "clap",
+ "concord-bridge",
  "concord-corpus",
  "concord-cruxes",
  "concord-deescalate",
@@ -189,6 +190,17 @@ dependencies = [
  "serde",
  "serde_json",
  "sigpipe",
+ "tempfile",
+]
+
+[[package]]
+name = "concord-bridge"
+version = "0.4.0"
+dependencies = [
+ "anyhow",
+ "concord-cruxes",
+ "serde",
+ "serde_json",
  "tempfile",
 ]
 
