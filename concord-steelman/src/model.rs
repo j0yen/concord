@@ -43,7 +43,7 @@ impl MockModel {
     ///
     /// Keys are fingerprints (first 40 non-whitespace characters of the prompt).
     #[must_use]
-    pub fn new(responses: HashMap<String, String>) -> Self {
+    pub const fn new(responses: HashMap<String, String>) -> Self {
         Self { responses, default_response: None, call_count: std::cell::Cell::new(0) }
     }
 

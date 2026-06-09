@@ -30,7 +30,7 @@ use serde::{Deserialize, Serialize};
 
 /// A steelmanned version of a stance: the argument a thoughtful proponent
 /// would actually endorse.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Steelman {
     /// The stance this steelman represents.
     pub stance: String,
@@ -50,7 +50,7 @@ pub struct Steelman {
 }
 
 /// A single supporting premise with source citations.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Premise {
     /// The premise text.
     pub text: String,

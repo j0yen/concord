@@ -56,31 +56,31 @@ fn steelman_one(
 
     // First attempt.
     let response = model.complete(&prompt)?;
-    let mut steel = parse_response(&response, &summary.stance, corpus.sources.len());
+    let steel = parse_response(&response, &summary.stance, corpus.sources.len());
 
     // Anti-caricature check — regenerate once on failure.
-    if let Err(reason) = check_anti_caricature(&full_text(&steel)) {
-        let prompt2 =
-            build_regeneration_prompt(&prompt, &reason);
-        match model.complete(&prompt2) {
-            Ok(response2) => {
-                let steel2 = parse_response(&response2, &summary.stance, corpus.sources.len());
+    let builder = if let Err(reason) = check_anti_caricature(&full_text(&steel)) {
+        let prompt2 = build_regeneration_prompt(&prompt, &reason);
+        model.complete(&prompt2).map_or_else(
+            |_| {
+                // Model errored on retry — flag original.
+                steel.flagged_with(format!("anti-caricature: {reason}"))
+            },
+            |response2| {
+                let steel2 =
+                    parse_response(&response2, &summary.stance, corpus.sources.len());
                 if let Err(reason2) = check_anti_caricature(&full_text(&steel2)) {
                     // Still failing — flag.
                     steel2.flagged_with(format!("anti-caricature (retry): {reason2}"))
                 } else {
                     steel2
                 }
-            }
-            Err(_) => {
-                // Model errored on retry — flag original.
-                steel.flagged_with(format!("anti-caricature: {reason}"))
-            }
-        }
+            },
+        )
     } else {
         steel
-    }
-    .pipe_ok()
+    };
+    Ok(builder.into_steelman())
 }
 
 /// Parse the model's text response into a [`Steelman`].
@@ -128,7 +128,7 @@ fn parse_response(response: &str, stance: &Stance, source_count: usize) -> Steel
 
     let flagged = !bad_citations.is_empty();
     let flag_reason = if flagged {
-        format!("invalid source ids: {:?}", bad_citations)
+        format!("invalid source ids: {bad_citations:?}")
     } else {
         String::new()
     };
@@ -151,34 +151,29 @@ fn extract_citations(raw: &str) -> (String, Vec<usize>) {
     let mut text = raw.to_string();
 
     // Find all [SOURCE_ID=N] occurrences.
-    let mut search = text.clone();
     let tag = "[SOURCE_ID=";
-    loop {
-        if let Some(start) = search.find(tag) {
-            let after_tag = &search[start + tag.len()..];
-            if let Some(end) = after_tag.find(']') {
-                let id_str = &after_tag[..end];
-                if let Ok(id) = id_str.trim().parse::<usize>() {
-                    ids.push(id);
-                }
-                search = after_tag[end + 1..].to_string();
-            } else {
-                break;
+    let mut search = raw;
+    while let Some(start) = search.find(tag) {
+        let after_tag = &search[start + tag.len()..];
+        if let Some(end) = after_tag.find(']') {
+            let id_str = &after_tag[..end];
+            if let Ok(id) = id_str.trim().parse::<usize>() {
+                ids.push(id);
             }
+            search = &after_tag[end + 1..];
         } else {
             break;
         }
     }
 
     // Strip annotations from the text.
-    let pattern = regex_lite_replace(&text);
-    text = pattern;
+    text = strip_source_id_tags(&text);
 
     (text.trim().to_string(), ids)
 }
 
 /// Remove all `[SOURCE_ID=N]` annotations from `text`.
-fn regex_lite_replace(text: &str) -> String {
+fn strip_source_id_tags(text: &str) -> String {
     let mut result = String::new();
     let mut remaining = text;
     let tag = "[SOURCE_ID=";
@@ -191,7 +186,7 @@ fn regex_lite_replace(text: &str) -> String {
             } else {
                 // Malformed tag — keep the rest verbatim.
                 result.push_str(tag);
-                remaining = after_tag;
+                result.push_str(after_tag);
                 break;
             }
         } else {
@@ -209,14 +204,16 @@ fn derive_stance_label(corpus: &Corpus, stance: &Stance) -> String {
         .sources
         .iter()
         .find(|s| &s.stance == stance)
-        .map(|s| {
-            if s.stance_label.is_empty() {
-                stance.to_string()
-            } else {
-                s.stance_label.clone()
-            }
-        })
-        .unwrap_or_else(|| stance.to_string())
+        .map_or_else(
+            || stance.to_string(),
+            |s| {
+                if s.stance_label.is_empty() {
+                    stance.to_string()
+                } else {
+                    s.stance_label.clone()
+                }
+            },
+        )
 }
 
 /// Build a prompt asking the model to retry without the offending term.
@@ -257,9 +254,9 @@ impl SteelmanBuilder {
         self
     }
 
-    /// Convert to `Result<Steelman>` (always Ok — errors become flags).
-    fn pipe_ok(self) -> Result<Steelman> {
-        Ok(Steelman {
+    /// Convert to [`Steelman`].
+    fn into_steelman(self) -> Steelman {
+        Steelman {
             stance: self.stance,
             claim: self.claim,
             premises: self.premises,
@@ -267,11 +264,14 @@ impl SteelmanBuilder {
             cited_source_ids: self.cited_source_ids,
             flagged: self.flagged,
             flag_reason: self.flag_reason,
-        })
+        }
     }
 }
 
 /// Convenience — check citations across all premises; exposed for tests.
+///
+/// # Errors
+/// Returns `Err(bad_ids)` if any premise references a source index ≥ `source_count`.
 pub fn check_all_citations(steel: &Steelman, source_count: usize) -> Result<(), Vec<usize>> {
     let mut bad = Vec::new();
     for premise in &steel.premises {
