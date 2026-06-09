@@ -13,7 +13,7 @@ pub enum CruxKind {
 }
 
 /// A genuine divergence between the two sides.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Crux {
     /// A concise statement of the divergence.
     pub statement: String,
@@ -26,14 +26,14 @@ pub struct Crux {
 }
 
 /// A value that both sides already hold in common.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SharedValue {
     /// A concise statement of the shared value.
     pub statement: String,
 }
 
 /// An apparent conflict that dissolves on clarification.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Misunderstanding {
     /// A description of the apparent conflict.
     pub apparent_conflict: String,
@@ -42,7 +42,7 @@ pub struct Misunderstanding {
 }
 
 /// A structured map of where the disagreement actually is.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DisagreementMap {
     /// The contested claim this map was built for.
     pub claim: String,
