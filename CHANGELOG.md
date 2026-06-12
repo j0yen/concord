@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.6.0 — 2026-06-12
+
+concord-cruxes: crux separation engine — separates steelmanned positions into shared values, genuine cruxes (empirical/value-tagged with change-minds fields), and terminological misunderstandings. DisagreementMap schema with JSON roundtrip, MockModel-based offline tests, 70%+ accuracy on independently authored held-out fixture (AC3). CLI subcommands: cruxes analyze / cruxes show. All 22 tests green (15 unit + 7 integration). AC1-AC5 met; AC6 (live LLM) deferred.
+
 ## v0.5.0 — 2026-06-12
 
 concord-bridge: balanced brief synthesizer capstone; all 6 automated ACs pass (build+test green, balance gate, citation integrity, coverage clause, end-to-end pipeline, no-network); AC7 deferred (live LLM evaluation)
