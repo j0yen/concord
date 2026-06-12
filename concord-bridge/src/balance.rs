@@ -24,7 +24,7 @@ impl BalanceResult {
 
     /// Construct a failing result with recorded failures.
     #[must_use]
-    pub fn failed(failures: Vec<String>) -> Self {
+    pub const fn failed(failures: Vec<String>) -> Self {
         Self { passed: false, failures }
     }
 }
