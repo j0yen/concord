@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5.0 — 2026-06-12
+
+concord-bridge: balanced brief synthesizer capstone; all 6 automated ACs pass (build+test green, balance gate, citation integrity, coverage clause, end-to-end pipeline, no-network); AC7 deferred (live LLM evaluation)
+
 ## v0.4.0 — 2026-06-06
 
 Add concord-deescalate: de-escalation engine that rephrases heated messages into
